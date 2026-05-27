@@ -105,9 +105,20 @@ _ = Task.Run(async () =>
             await db.SaveChangesAsync();
         }
 
-        // Seed floors & units
-        if (!await db.Floors.AnyAsync())
+        // Seed floors & units (runs if structure doesn't match)
+        if (!await db.Units.AnyAsync(u => u.UnitNumber == "G1" && u.Type == "Shop"))
         {
+            // Remove old data first
+            db.Payments.RemoveRange(db.Payments);
+            db.RentIncreaseHistories.RemoveRange(db.RentIncreaseHistories);
+            db.MaintenanceRequests.RemoveRange(db.MaintenanceRequests);
+            db.Notifications.RemoveRange(db.Notifications);
+            db.Contracts.RemoveRange(db.Contracts);
+            db.Units.RemoveRange(db.Units);
+            db.Floors.RemoveRange(db.Floors);
+            db.Tenants.RemoveRange(db.Tenants);
+            await db.SaveChangesAsync();
+
             var building = await db.Buildings.FirstAsync();
             var ground = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 0, Label = "Ground" };
             var second = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 2, Label = "2nd" };
@@ -130,7 +141,7 @@ _ = Task.Run(async () =>
         }
 
         // Seed tenants & contracts
-        if (!await db.Tenants.AnyAsync())
+        if (!await db.Tenants.AnyAsync(t => t.NationalId == "29801011234567"))
         {
             db.Tenants.AddRange(
                 new BinayatiBackend.Models.Tenant { Name = "أحمد علي", PhoneNumber = "01234567890", Email = "ahmed@example.com", NationalId = "29801011234567" },
