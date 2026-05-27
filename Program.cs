@@ -5,6 +5,10 @@ using Microsoft.IdentityModel.Tokens;
 using BinayatiBackend.Data;
 using BinayatiBackend.Services;
 
+Console.WriteLine("Starting Binayati backend..."); 
+
+try
+{
 var builder = WebApplication.CreateBuilder(args);
 
 var connStr = builder.Configuration.GetConnectionString("Default");
@@ -89,4 +93,12 @@ app.MapControllers();
 
 app.MapGet("/", () => Results.Ok(new { status = "running", app = "Binayati" }));
 
+Console.WriteLine("Binayati backend started successfully");
 app.Run();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"FATAL: {ex.GetType().Name}: {ex.Message}");
+    Console.WriteLine(ex.StackTrace);
+    throw;
+}
