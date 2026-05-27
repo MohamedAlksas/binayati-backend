@@ -62,7 +62,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.MapGet("/", () => Results.Ok(new { status = "running", app = "Binayati" }));
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.MapFallbackToFile("index.html");
 
 // Background DB init
 _ = Task.Run(async () =>
