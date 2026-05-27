@@ -63,7 +63,12 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseDefaultFiles();
-app.UseStaticFiles();
+var contentTypeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+contentTypeProvider.Mappings[".apk"] = "application/vnd.android.package-archive";
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = contentTypeProvider
+});
 app.MapFallbackToFile("index.html");
 
 // Background DB init
