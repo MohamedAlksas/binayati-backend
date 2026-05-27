@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using BinayatiBackend.Data;
 using BinayatiBackend.Services;
 
@@ -56,42 +57,58 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
-
-    var hasBuilding = await db.Buildings.AnyAsync();
-    if (!hasBuilding)
-    {
-        db.Buildings.Add(new BinayatiBackend.Models.Building
-        {
-            Name = "المبنى",
-            Address = "",
-        });
-        await db.SaveChangesAsync();
-    }
-
-    var hasOwner = await db.Users.AnyAsync(u => u.Role == "Owner");
-    if (!hasOwner)
-    {
-        db.Users.Add(new BinayatiBackend.Models.User
-        {
-            FullName = "Owner",
-            Email = "owner@binayati.com",
-            PasswordHash = PasswordService.Hash("admin123"),
-            Role = "Owner",
-        });
-        await db.SaveChangesAsync();
-    }
-}
-
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => Results.Ok(new { status = "running", app = "Binayati" }));
+
+// Background DB init
+_ = Task.Run(async () =>
+{
+    try
+    {
+        Console.WriteLine("DB init starting...");
+        var connStr = builder.Configuration.GetConnectionString("Default");
+        Console.WriteLine($"Connecting to DB...");
+        using var rawConn = new NpgsqlConnection(connStr);
+        await rawConn.OpenAsync();
+        Console.WriteLine("Raw connection OK");
+        using var cmd = rawConn.CreateCommand();
+        cmd.CommandText = "SELECT version()";
+        var version = await cmd.ExecuteScalarAsync();
+        Console.WriteLine($"DB version: {version}");
+        await rawConn.CloseAsync();
+
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Console.WriteLine("DB init: EnsureCreated...");
+        db.Database.EnsureCreated();
+        Console.WriteLine("DB init: Seeding...");
+        if (!await db.Buildings.AnyAsync())
+        {
+            db.Buildings.Add(new BinayatiBackend.Models.Building { Name = "المبنى", Address = "" });
+            await db.SaveChangesAsync();
+        }
+        if (!await db.Users.AnyAsync(u => u.Role == "Owner"))
+        {
+            db.Users.Add(new BinayatiBackend.Models.User
+            {
+                FullName = "Owner",
+                Email = "owner@binayati.com",
+                PasswordHash = PasswordService.Hash("admin123"),
+                Role = "Owner",
+            });
+            await db.SaveChangesAsync();
+        }
+        Console.WriteLine("DB init completed successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"DB init error: {ex.GetType().Name}: {ex.Message}");
+    }
+});
 
 Console.WriteLine("Binayati backend started successfully");
 app.Run();
