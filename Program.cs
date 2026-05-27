@@ -110,18 +110,21 @@ _ = Task.Run(async () =>
         {
             var building = await db.Buildings.FirstAsync();
             var ground = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 0, Label = "Ground" };
-            var first = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 1, Label = "1st" };
             var second = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 2, Label = "2nd" };
-            db.Floors.AddRange(ground, first, second);
+            var third = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 3, Label = "3rd" };
+            var fourth = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 4, Label = "4th" };
+            var fifth = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 5, Label = "5th" };
+            db.Floors.AddRange(ground, second, third, fourth, fifth);
             await db.SaveChangesAsync();
 
             db.Units.AddRange(
-                new BinayatiBackend.Models.Unit { FloorId = ground.Id, UnitNumber = "G1", Type = "Shop", Description = "Main entrance shop" },
-                new BinayatiBackend.Models.Unit { FloorId = ground.Id, UnitNumber = "G2", Type = "Shop", Description = "Side street shop" },
-                new BinayatiBackend.Models.Unit { FloorId = first.Id, UnitNumber = "101", Type = "Apartment", Description = "2BR, 120m²" },
-                new BinayatiBackend.Models.Unit { FloorId = first.Id, UnitNumber = "102", Type = "Apartment", Description = "1BR, 80m²" },
-                new BinayatiBackend.Models.Unit { FloorId = second.Id, UnitNumber = "201", Type = "Apartment", Description = "3BR, 150m²" },
-                new BinayatiBackend.Models.Unit { FloorId = second.Id, UnitNumber = "202", Type = "Apartment", Description = "2BR, 100m²" }
+                new BinayatiBackend.Models.Unit { FloorId = ground.Id, UnitNumber = "G1", Type = "Shop", Description = "Ground floor shop" },
+                new BinayatiBackend.Models.Unit { FloorId = second.Id, UnitNumber = "201", Type = "Apartment", Description = "2BR, 120m²" },
+                new BinayatiBackend.Models.Unit { FloorId = second.Id, UnitNumber = "202", Type = "Apartment", Description = "1BR, 80m²" },
+                new BinayatiBackend.Models.Unit { FloorId = third.Id, UnitNumber = "301", Type = "Apartment", Description = "3BR, 150m²" },
+                new BinayatiBackend.Models.Unit { FloorId = third.Id, UnitNumber = "302", Type = "Apartment", Description = "2BR, 100m²" },
+                new BinayatiBackend.Models.Unit { FloorId = fourth.Id, UnitNumber = "401", Type = "Apartment", Description = "2BR, 110m²" },
+                new BinayatiBackend.Models.Unit { FloorId = fifth.Id, UnitNumber = "501", Type = "Apartment", Description = "3BR, 160m²" }
             );
             await db.SaveChangesAsync();
         }
@@ -139,7 +142,7 @@ _ = Task.Run(async () =>
         if (!await db.Contracts.AnyAsync())
         {
             var shop = await db.Units.FirstAsync(u => u.UnitNumber == "G1");
-            var apt = await db.Units.FirstAsync(u => u.UnitNumber == "101");
+            var apt = await db.Units.FirstAsync(u => u.UnitNumber == "201");
             var ahmed = await db.Tenants.FirstAsync(t => t.NationalId == "29801011234567");
             var mohamed = await db.Tenants.FirstAsync(t => t.NationalId == "28503041234567");
 
