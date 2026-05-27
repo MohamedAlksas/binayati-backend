@@ -7,5 +7,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/out .
 EXPOSE 10000
-ENV ASPNETCORE_URLS=http://0.0.0.0:10000
-CMD ["dotnet", "BinayatiBackend.dll"]
+CMD ASPNETCORE_URLS="http://0.0.0.0:${PORT:-10000}" dotnet BinayatiBackend.dll
