@@ -106,7 +106,7 @@ _ = Task.Run(async () =>
         }
 
         // Seed floors & units (runs if structure doesn't match)
-        if (!await db.Units.AnyAsync(u => u.UnitNumber == "G1" && u.Type == "Shop"))
+        if (!await db.Units.AnyAsync(u => u.UnitNumber == "501"))
         {
             // Remove old data first
             db.Payments.RemoveRange(db.Payments);
