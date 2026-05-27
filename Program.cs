@@ -102,6 +102,78 @@ _ = Task.Run(async () =>
             });
             await db.SaveChangesAsync();
         }
+
+        // Seed floors & units
+        if (!await db.Floors.AnyAsync())
+        {
+            var building = await db.Buildings.FirstAsync();
+            var ground = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 0, Label = "Ground" };
+            var first = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 1, Label = "1st" };
+            var second = new BinayatiBackend.Models.Floor { BuildingId = building.Id, FloorNumber = 2, Label = "2nd" };
+            db.Floors.AddRange(ground, first, second);
+            await db.SaveChangesAsync();
+
+            db.Units.AddRange(
+                new BinayatiBackend.Models.Unit { FloorId = ground.Id, UnitNumber = "G1", Type = "Shop", Description = "Main entrance shop" },
+                new BinayatiBackend.Models.Unit { FloorId = ground.Id, UnitNumber = "G2", Type = "Shop", Description = "Side street shop" },
+                new BinayatiBackend.Models.Unit { FloorId = first.Id, UnitNumber = "101", Type = "Apartment", Description = "2BR, 120m²" },
+                new BinayatiBackend.Models.Unit { FloorId = first.Id, UnitNumber = "102", Type = "Apartment", Description = "1BR, 80m²" },
+                new BinayatiBackend.Models.Unit { FloorId = second.Id, UnitNumber = "201", Type = "Apartment", Description = "3BR, 150m²" },
+                new BinayatiBackend.Models.Unit { FloorId = second.Id, UnitNumber = "202", Type = "Apartment", Description = "2BR, 100m²" }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        // Seed tenants & contracts
+        if (!await db.Tenants.AnyAsync())
+        {
+            db.Tenants.AddRange(
+                new BinayatiBackend.Models.Tenant { Name = "أحمد علي", PhoneNumber = "01234567890", Email = "ahmed@example.com", NationalId = "29801011234567" },
+                new BinayatiBackend.Models.Tenant { Name = "محمد حسن", PhoneNumber = "01123456789", Email = "mohamed@example.com", NationalId = "28503041234567" }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.Contracts.AnyAsync())
+        {
+            var shop = await db.Units.FirstAsync(u => u.UnitNumber == "G1");
+            var apt = await db.Units.FirstAsync(u => u.UnitNumber == "101");
+            var ahmed = await db.Tenants.FirstAsync(t => t.NationalId == "29801011234567");
+            var mohamed = await db.Tenants.FirstAsync(t => t.NationalId == "28503041234567");
+
+            var contract1 = new BinayatiBackend.Models.Contract
+            {
+                UnitId = shop.Id, TenantId = ahmed.Id,
+                StartDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                EndDate = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc),
+                RentAmount = 5000, AnnualIncreasePercent = 10, SecurityDeposit = 10000,
+                Status = "Active", Notes = "Annual increase every January"
+            };
+            var contract2 = new BinayatiBackend.Models.Contract
+            {
+                UnitId = apt.Id, TenantId = mohamed.Id,
+                StartDate = new DateTime(2025, 3, 1, 0, 0, 0, DateTimeKind.Utc),
+                EndDate = new DateTime(2026, 2, 28, 0, 0, 0, DateTimeKind.Utc),
+                RentAmount = 3000, AnnualIncreasePercent = 8, SecurityDeposit = 6000,
+                Status = "Active", Notes = ""
+            };
+            db.Contracts.AddRange(contract1, contract2);
+            await db.SaveChangesAsync();
+
+            // Mark units as occupied
+            shop.IsOccupied = true;
+            apt.IsOccupied = true;
+            await db.SaveChangesAsync();
+
+            // Seed payments
+            db.Payments.AddRange(
+                new BinayatiBackend.Models.Payment { ContractId = contract1.Id, Amount = 5000, PaidDate = new DateTime(2025, 1, 5, 0, 0, 0, DateTimeKind.Utc), PeriodStart = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), PeriodEnd = new DateTime(2025, 1, 31, 0, 0, 0, DateTimeKind.Utc), Method = "Cash" },
+                new BinayatiBackend.Models.Payment { ContractId = contract1.Id, Amount = 5000, PaidDate = new DateTime(2025, 2, 3, 0, 0, 0, DateTimeKind.Utc), PeriodStart = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc), PeriodEnd = new DateTime(2025, 2, 28, 0, 0, 0, DateTimeKind.Utc), Method = "BankTransfer" },
+                new BinayatiBackend.Models.Payment { ContractId = contract2.Id, Amount = 3000, PaidDate = new DateTime(2025, 3, 5, 0, 0, 0, DateTimeKind.Utc), PeriodStart = new DateTime(2025, 3, 1, 0, 0, 0, DateTimeKind.Utc), PeriodEnd = new DateTime(2025, 3, 31, 0, 0, 0, DateTimeKind.Utc), Method = "Cash" }
+            );
+            await db.SaveChangesAsync();
+        }
+
         Console.WriteLine("DB init completed successfully");
     }
     catch (Exception ex)
