@@ -1,0 +1,35 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+packages/
+*.nupkg
+**/Publish*/
+publish/
+
+## Visual Studio
+.vs/
+*.sln.ide/
+*.dbmdl
+*.jfm
+*.log
+*.tmp
+
+## JetBrains Rider
+.idea/
+*.sln.iml
+
+## macOS
+.DS_Store
+
+## Docker
+docker-compose*.yml
+compose*.yml
+
+## Secrets
+appsettings.Secret*.json
+*.env
