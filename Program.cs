@@ -63,7 +63,19 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // No cache for HTML to force fresh Flutter web app on every load
+        if (ctx.File.Name.EndsWith(".html"))
+        {
+            ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+            ctx.Context.Response.Headers.Pragma = "no-cache";
+            ctx.Context.Response.Headers.Expires = "0";
+        }
+    }
+});
 app.MapFallbackToFile("index.html");
 
 // Background DB init
