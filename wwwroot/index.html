@@ -42,26 +42,28 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script>
-    // Unregister all service workers to force fresh load
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for (let registration of registrations) {
-          registration.unregister();
-        }
-      });
-    }
-  </script>
-  <script>
-    // Prevent Flutter from registering a new service worker
-    window.addEventListener('load', function() {
+    (function() {
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for (let registration of registrations) {
-            registration.unregister();
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          if (regs.length > 0) {
+            for (var r of regs) r.unregister();
+            // Clear all caches too
+            if ('caches' in window) {
+              caches.keys().then(function(names) {
+                for (var n of names) caches.delete(n);
+              });
+            }
+            // Reload to bypass SW cache
+            window.location.reload();
           }
         });
       }
-    });
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (var n of names) caches.delete(n);
+        });
+      }
+    })();
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
